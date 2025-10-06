@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import {
   Dialog,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
@@ -28,7 +26,6 @@ interface ServiceCreateDialogProps {
 
 export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCreateDialogProps) {
   const [nombre, setNombre] = useState("")
-  const [descripcion, setDescripcion] = useState("")
   const [precio, setPrecio] = useState("")
   const [activo, setActivo] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
@@ -43,7 +40,6 @@ export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCr
         method: "POST",
         body: JSON.stringify({
           nombre,
-          descripcion,
           precio: precio ? Number.parseFloat(precio) : undefined,
           activo,
         }),
@@ -57,7 +53,6 @@ export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCr
       onOpenChange(false)
       // Reset form
       setNombre("")
-      setDescripcion("")
       setPrecio("")
       setActivo(true)
     } catch (error) {
@@ -88,16 +83,6 @@ export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCr
                 onChange={(e) => setNombre(e.target.value)}
                 required
                 placeholder="Nombre del servicio"
-              />
-            </div>
-            <div>
-              <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea
-                id="descripcion"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                placeholder="Descripción del servicio"
-                rows={3}
               />
             </div>
             <div>

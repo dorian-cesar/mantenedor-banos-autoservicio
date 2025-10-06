@@ -17,9 +17,8 @@ export default function ServicesPage() {
   const [createOpen, setCreateOpen] = useState(false)
 
   const filteredServices = services?.filter(
-    (service: { nombre: string; descripcion?: string }) =>
-      service.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()),
+    (service: { nombre: string }) =>
+      service.nombre.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (

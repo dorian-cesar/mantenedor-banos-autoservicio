@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2 } from "lucide-react"
 import { ServiceEditDialog } from "./service-edit-dialog"
 import { ServiceDeleteDialog } from "./service-delete-dialog"
@@ -11,7 +10,6 @@ import { ServiceDeleteDialog } from "./service-delete-dialog"
 interface Service {
   id: string
   nombre: string
-  descripcion?: string
   precio?: number
   activo?: boolean
 }
@@ -43,7 +41,6 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="text-card-foreground">Nombre</TableHead>
-              <TableHead className="text-card-foreground">Descripción</TableHead>
               <TableHead className="text-card-foreground">Precio</TableHead>
               <TableHead className="text-right text-card-foreground">Acciones</TableHead>
             </TableRow>
@@ -52,7 +49,6 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
             {services.map((service) => (
               <TableRow key={service.id}>
                 <TableCell className="font-medium text-card-foreground">{service.nombre}</TableCell>
-                <TableCell className="text-card-foreground">{service.descripcion || "-"}</TableCell>
                 <TableCell className="text-card-foreground">
                   {service.precio ? `$${service.precio.toFixed(0)}` : "-"}
                 </TableCell>

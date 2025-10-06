@@ -14,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
@@ -23,7 +22,6 @@ import { Loader2 } from "lucide-react"
 interface Service {
   id: string
   nombre: string
-  descripcion?: string
   precio?: number
   activo?: boolean
 }
@@ -37,7 +35,6 @@ interface ServiceEditDialogProps {
 
 export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: ServiceEditDialogProps) {
   const [nombre, setNombre] = useState(service.nombre)
-  const [descripcion, setDescripcion] = useState(service.descripcion || "")
   const [precio, setPrecio] = useState(service.precio?.toString() || "")
   const [activo, setActivo] = useState(service.activo ?? true)
   const [isLoading, setIsLoading] = useState(false)
@@ -52,7 +49,6 @@ export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: Se
         method: "PUT",
         body: JSON.stringify({
           nombre,
-          descripcion,
           precio: precio ? Number.parseFloat(precio) : undefined,
           activo,
         }),
@@ -89,21 +85,14 @@ export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: Se
               <Input id="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
             </div>
             <div>
-              <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea
-                id="descripcion"
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
-                rows={3}
-              />
-            </div>
-            <div>
               <Label htmlFor="precio">Precio</Label>
-              <Input id="precio" type="number" step="0.01" value={precio} onChange={(e) => setPrecio(e.target.value)} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="activo">Servicio activo</Label>
-              <Switch id="activo" checked={activo} onCheckedChange={setActivo} />
+              <Input
+                id="precio"
+                type="number"
+                step="0.01"
+                value={precio}
+                onChange={(e) => setPrecio(e.target.value)}
+              />
             </div>
           </div>
           <DialogFooter className="mt-6">
