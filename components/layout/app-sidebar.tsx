@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Users, Shield, LogOut } from "lucide-react"
 import { useAuthStore } from "@/hooks/use-auth"
 import { Droplets, CreditCard } from "lucide-react"
 
@@ -19,6 +19,11 @@ const navigation = [
     name: "Usuarios",
     href: "/users",
     icon: Users,
+  },
+  {
+    name: "Roles de usuario",
+    href: "/roles",
+    icon: Shield,
   },
   {
     name: "Servicios",
