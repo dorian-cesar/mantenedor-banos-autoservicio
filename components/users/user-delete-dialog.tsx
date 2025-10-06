@@ -13,12 +13,8 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
 import { Loader2 } from "lucide-react"
+import type { User } from "@/types/user"
 
-interface User {
-  id: string
-  email: string
-  nombre?: string
-}
 
 interface UserDeleteDialogProps {
   user: User

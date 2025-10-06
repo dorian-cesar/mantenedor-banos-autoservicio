@@ -13,13 +13,10 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",                  // ✅ apunta a la raíz del proyecto
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"]                 // ✅ busca dentro de la raíz
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
