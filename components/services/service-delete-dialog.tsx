@@ -1,53 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
-import { Loader2 } from "lucide-react"
-
-interface Service {
-  id: string
-  nombre: string
-}
+import { Loader2, Trash2 } from "lucide-react"
 
 interface ServiceDeleteDialogProps {
-  service: Service
+  service: { id: string; nombre: string }
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
 export function ServiceDeleteDialog({ service, open, onOpenChange, onSuccess }: ServiceDeleteDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
 
   async function handleDelete() {
     setIsLoading(true)
-
     try {
-      await fetchWithAuth(`/api/servicios/${service.id}`, {
-        method: "DELETE",
-      })
-
+      await fetchWithAuth(`/api/servicios/${service.id}`, { method: "DELETE" })
       toast({
         title: "Servicio eliminado",
-        description: "El servicio se ha eliminado correctamente",
+        description: `El servicio "${service.nombre}" ha sido eliminado correctamente.`,
       })
       onSuccess()
       onOpenChange(false)
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Error al eliminar servicio",
+        title: "Error al eliminar",
+        description: error instanceof Error ? error.message : "Error desconocido al eliminar el servicio",
         variant: "destructive",
       })
     } finally {
@@ -56,31 +47,50 @@ export function ServiceDeleteDialog({ service, open, onOpenChange, onSuccess }: 
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente el servicio{" "}
-            <span className="font-semibold">{service.nombre}</span>.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Eliminar Servicio</DialogTitle>
+          <DialogDescription>
+            ¿Estás seguro de que deseas eliminar el servicio{" "}
+            <span className="font-semibold">{service.nombre}</span>? Esta acción no se puede deshacer.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="cursor-pointer hover:bg-accent transition-colors"
+            title="Cancelar eliminación"
+          >
             Cancelar
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
+
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isLoading}
+            className="cursor-pointer hover:bg-destructive/90 transition-colors"
+            title="Confirmar eliminación"
+          >
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Eliminando...
               </>
             ) : (
-              "Eliminar"
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </>
             )}
           </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

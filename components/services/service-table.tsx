@@ -45,6 +45,7 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
               <TableHead className="text-right text-card-foreground">Acciones</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {services.map((service) => (
               <TableRow key={service.id}>
@@ -52,13 +53,27 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
                 <TableCell className="text-card-foreground">
                   {service.precio ? `$${service.precio.toFixed(0)}` : "-"}
                 </TableCell>
+
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(service)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(service)}
+                      className="cursor-pointer hover:bg-accent transition-colors"
+                      title="Editar servicio"
+                    >
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Editar</span>
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(service)}>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(service)}
+                      className="cursor-pointer hover:bg-accent transition-colors"
+                      title="Eliminar servicio"
+                    >
                       <Trash2 className="h-4 w-4 text-destructive" />
                       <span className="sr-only">Eliminar</span>
                     </Button>

@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import {
   Dialog,
@@ -36,7 +35,6 @@ interface ServiceEditDialogProps {
 export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: ServiceEditDialogProps) {
   const [nombre, setNombre] = useState(service.nombre)
   const [precio, setPrecio] = useState(service.precio?.toString() || "")
-  const [activo, setActivo] = useState(service.activo ?? true)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -50,7 +48,6 @@ export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: Se
         body: JSON.stringify({
           nombre,
           precio: precio ? Number.parseFloat(precio) : undefined,
-          activo,
         }),
       })
 
@@ -82,7 +79,13 @@ export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: Se
           <div className="space-y-4">
             <div>
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+              <Input
+                id="nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                required
+                className="cursor-text mt-2"
+              />
             </div>
             <div>
               <Label htmlFor="precio">Precio</Label>
@@ -92,14 +95,27 @@ export function ServiceEditDialog({ service, open, onOpenChange, onSuccess }: Se
                 step="0.01"
                 value={precio}
                 onChange={(e) => setPrecio(e.target.value)}
+                className="cursor-text mt-2"
               />
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+              className="cursor-pointer hover:bg-accent transition-colors"
+              title="Cancelar"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="cursor-pointer hover:bg-primary/90 transition-colors"
+              title="Guardar cambios"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

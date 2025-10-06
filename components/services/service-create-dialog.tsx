@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +16,7 @@ import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/hooks/use-toast"
 import { fetchWithAuth } from "@/lib/api"
 import { Loader2 } from "lucide-react"
+import { useState } from "react"
 
 interface ServiceCreateDialogProps {
   open: boolean
@@ -83,6 +83,7 @@ export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCr
                 onChange={(e) => setNombre(e.target.value)}
                 required
                 placeholder="Nombre del servicio"
+                className="cursor-text mt-2"
               />
             </div>
             <div>
@@ -93,19 +94,32 @@ export function ServiceCreateDialog({ open, onOpenChange, onSuccess }: ServiceCr
                 step="0.01"
                 value={precio}
                 onChange={(e) => setPrecio(e.target.value)}
-                placeholder="0.00"
+                placeholder="$0"
+                className="cursor-text mt-2"
               />
             </div>
             <div className="flex items-center justify-between">
               <Label htmlFor="activo">Servicio activo</Label>
-              <Switch id="activo" checked={activo} onCheckedChange={setActivo} />
+              <Switch id="activo" checked={activo} onCheckedChange={setActivo} className="cursor-pointer" />
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+              className="cursor-pointer hover:bg-accent transition-colors"
+              title="Cancelar"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="cursor-pointer hover:bg-primary/90 transition-colors"
+              title="Crear servicio"
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
