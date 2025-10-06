@@ -45,7 +45,6 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
               <TableHead className="text-card-foreground">Nombre</TableHead>
               <TableHead className="text-card-foreground">Descripción</TableHead>
               <TableHead className="text-card-foreground">Precio</TableHead>
-              <TableHead className="text-card-foreground">Estado</TableHead>
               <TableHead className="text-right text-card-foreground">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -55,12 +54,7 @@ export function ServiceTable({ services, onUpdate }: ServiceTableProps) {
                 <TableCell className="font-medium text-card-foreground">{service.nombre}</TableCell>
                 <TableCell className="text-card-foreground">{service.descripcion || "-"}</TableCell>
                 <TableCell className="text-card-foreground">
-                  {service.precio ? `$${service.precio.toFixed(2)}` : "-"}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={service.activo ? "default" : "secondary"}>
-                    {service.activo ? "Activo" : "Inactivo"}
-                  </Badge>
+                  {service.precio ? `$${service.precio.toFixed(0)}` : "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
