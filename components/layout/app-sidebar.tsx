@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react"
 import { useAuthStore } from "@/hooks/use-auth"
-import { Search, Plus, ShoppingCart, CreditCard } from "lucide-react"
+import { Droplets, CreditCard } from "lucide-react"
 
 const navigation = [
   {
@@ -23,7 +23,7 @@ const navigation = [
   {
     name: "Servicios",
     href: "/services",
-    icon: Settings,
+    icon: Droplets,
   },
   {
     name: "Ventas",

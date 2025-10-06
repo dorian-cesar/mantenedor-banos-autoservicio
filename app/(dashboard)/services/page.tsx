@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { ServiceTable } from "@/components/services/service-table"
 import { ServiceCreateDialog } from "@/components/services/service-create-dialog"
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Droplets } from "lucide-react"
 import { useState } from "react"
 
 export default function ServicesPage() {
@@ -24,11 +24,18 @@ export default function ServicesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Servicios</h1>
-          <p className="mt-2 text-muted-foreground">Gestiona los servicios del sistema</p>
+        <div className="flex items-center gap-3">
+          <Droplets className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Servicios</h1>
+            <p className="mt-2 text-muted-foreground">Gestiona los servicios del sistema</p>
+          </div>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
+
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="cursor-pointer hover:bg-primary/90 transition-colors"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Nuevo Servicio
         </Button>

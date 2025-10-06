@@ -9,10 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Search, Plus, ShoppingCart, CreditCard } from "lucide-react"
 import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { toast } from "sonner"
+
+
 
 export default function VentasPage() {
   const { data: ventas, isLoading, mutate } = useSWR("/api/ventas", fetchWithAuth)
@@ -40,6 +38,7 @@ export default function VentasPage() {
       {/* Encabezado */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
+          <CreditCard className="h-8 w-8 text-primary" />
           <div>
             <h1 className="text-3xl font-bold text-foreground">Ventas</h1>
             <p className="mt-2 text-muted-foreground">Gestiona las ventas registradas del sistema</p>
