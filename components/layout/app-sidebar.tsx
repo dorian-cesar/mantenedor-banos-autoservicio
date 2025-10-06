@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { LayoutDashboard, Users, Settings, LogOut } from "lucide-react"
 import { useAuthStore } from "@/hooks/use-auth"
+import { Search, Plus, ShoppingCart, CreditCard } from "lucide-react"
 
 const navigation = [
   {
@@ -24,6 +25,11 @@ const navigation = [
     href: "/services",
     icon: Settings,
   },
+  {
+    name: "Ventas",
+    href: "/ventas",
+    icon: CreditCard,
+  }
 ]
 
 export function AppSidebar() {

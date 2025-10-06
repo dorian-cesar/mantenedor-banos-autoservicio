@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Users, Settings, TrendingUp, Activity } from "lucide-react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface DashboardStats {
   totalUsers: number
@@ -25,10 +26,21 @@ const chartConfig = {
 export default function DashboardPage() {
   const { data: users, isLoading: usersLoading } = useSWR("/api/users", fetchWithAuth)
   const { data: services, isLoading: servicesLoading } = useSWR("/api/servicios", fetchWithAuth)
+  const { data: ventas, isLoading: loadingVentas } = useSWR("/api/ventas", fetchWithAuth)
+  const { data: logs, isLoading: loadingLogs } = useSWR("/api/logs", fetchWithAuth)
 
   const totalUsers = users?.length || 0
   const totalServices = services?.length || 0
   const recentUsers = users?.slice(0, 5) || []
+
+  const formatCLP = (value: number) =>
+    new Intl.NumberFormat("es-CL", {
+      style: "currency",
+      currency: "CLP",
+      minimumFractionDigits: 0,
+    }).format(value)
+
+  const totalVentas = ventas?.data?.reduce((acc: number, v: any) => acc + v.monto, 0) || 0
 
   // Simular datos de servicios populares para el gráfico
   const chartData =
@@ -170,6 +182,88 @@ export default function DashboardPage() {
                   <p className="text-center text-sm text-muted-foreground">No hay usuarios recientes</p>
                 )}
               </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ==== NUEVOS BLOQUES ==== */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Ventas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ventas Recientes</CardTitle>
+            <CardDescription>Últimas transacciones registradas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingVentas ? (
+              <Skeleton className="h-20 w-full" />
+            ) : (
+              <>
+                <p className="text-lg font-semibold mb-4">Total vendido: {formatCLP(totalVentas)}</p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Servicio</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Método</TableHead>
+                      <TableHead>Usuario</TableHead>
+                      <TableHead>Fecha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ventas?.data?.slice(0, 5).map((v: any) => (
+                      <TableRow key={v.id}>
+                        <TableCell>{v.servicio?.nombre}</TableCell>
+                        <TableCell>{formatCLP(v.monto)}</TableCell>
+                        <TableCell>{v.metodo_pago}</TableCell>
+                        <TableCell>{v.usuario?.name || "Anon"}</TableCell>
+                        <TableCell>{new Date(v.creado_en).toLocaleString("es-CL")}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Logs */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Logs de API</CardTitle>
+            <CardDescription>Últimos registros de actividad</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingLogs ? (
+              <Skeleton className="h-20 w-full" />
+            ) : logs?.length ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Usuario</TableHead>
+                    <TableHead>Endpoint</TableHead>
+                    <TableHead>Método</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Tiempo (ms)</TableHead>
+                    <TableHead>Fecha</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {logs.slice(0, 5).map((log: any) => (
+                    <TableRow key={log.id}>
+                      <TableCell>{log.user_email}</TableCell>
+                      <TableCell>{log.endpoint}</TableCell>
+                      <TableCell>{log.method}</TableCell>
+                      <TableCell>{log.status_code}</TableCell>
+                      <TableCell>{log.response_time_ms}</TableCell>
+                      <TableCell>{new Date(log.created_at).toLocaleString("es-CL")}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-muted-foreground text-sm text-center py-6">No hay logs recientes</p>
             )}
           </CardContent>
         </Card>
