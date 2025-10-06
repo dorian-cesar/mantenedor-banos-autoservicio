@@ -22,13 +22,12 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [roleId, setRoleId] = useState<string>("")
+  const [roleId, setRoleId] = useState("")
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([])
   const [isActive, setIsActive] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  // 🔹 Cargar roles
   useEffect(() => {
     async function loadRoles() {
       try {
@@ -44,7 +43,6 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
-
     try {
       await fetchWithAuth("/api/users", {
         method: "POST",
@@ -57,8 +55,7 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
           is_active: isActive,
         }),
       })
-
-      toast({ title: "Usuario creado", description: "El usuario se ha creado correctamente" })
+      toast({ title: "Usuario creado", description: "El usuario ha sido creado correctamente" })
       onSuccess()
       onOpenChange(false)
       setName("")
@@ -82,30 +79,31 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Crear Usuario</DialogTitle>
-          <DialogDescription>Agrega un nuevo usuario al sistema</DialogDescription>
+          <DialogTitle>Nuevo Usuario</DialogTitle>
+          <DialogDescription>Completa los campos para crear un nuevo usuario</DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-2" />
           </div>
           <div>
             <Label htmlFor="lastName">Apellido</Label>
-            <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} className="mt-2" />
           </div>
           <div>
             <Label htmlFor="email">Email *</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-2" />
           </div>
           <div>
             <Label htmlFor="password">Contraseña *</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-2" />
           </div>
           <div>
             <Label htmlFor="role">Rol *</Label>
             <Select value={roleId} onValueChange={setRoleId} required>
-              <SelectTrigger id="role">
+              <SelectTrigger id="role" className="mt-2">
                 <SelectValue placeholder="Selecciona un rol" />
               </SelectTrigger>
               <SelectContent>
@@ -117,16 +115,35 @@ export function UserCreateDialog({ open, onOpenChange, onSuccess }: UserCreateDi
               </SelectContent>
             </Select>
           </div>
+
           <div className="flex items-center justify-between">
             <Label htmlFor="isActive">Usuario activo</Label>
-            <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} />
+            <Switch id="isActive" checked={isActive} onCheckedChange={setIsActive} className="cursor-pointer" />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+
+          <DialogFooter className="mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+              className="cursor-pointer hover:bg-accent transition-colors"
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !roleId}>
-              {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creando...</> : "Crear Usuario"}
+            <Button
+              type="submit"
+              disabled={isLoading || !roleId}
+              className="cursor-pointer hover:bg-primary/90 transition-colors"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                "Crear Usuario"
+              )}
             </Button>
           </DialogFooter>
         </form>

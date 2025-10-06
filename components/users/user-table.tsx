@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2 } from "lucide-react"
 import { UserEditDialog } from "./user-edit-dialog"
 import { UserDeleteDialog } from "./user-delete-dialog"
-import { UserDetailDialog } from "./user-detail-dialog"
 import type { User } from "@/types/user"
 
 interface UserTableProps {
@@ -19,7 +18,6 @@ export function UserTable({ users, onUpdate }: UserTableProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [detailOpen, setDetailOpen] = useState(false)
 
   const handleEdit = (user: User) => {
     setSelectedUser(user)
@@ -33,7 +31,6 @@ export function UserTable({ users, onUpdate }: UserTableProps) {
 
   const handleDetail = (user: User) => {
     setSelectedUser(user)
-    setDetailOpen(true)
   }
 
   return (
@@ -121,11 +118,6 @@ export function UserTable({ users, onUpdate }: UserTableProps) {
             open={deleteOpen}
             onOpenChange={setDeleteOpen}
             onSuccess={onUpdate}
-          />
-          <UserDetailDialog
-            user={selectedUser}
-            open={detailOpen}
-            onOpenChange={setDetailOpen}
           />
         </>
       )}

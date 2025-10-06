@@ -47,6 +47,16 @@ export function UserEditDialog({
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
+  // 🔧 Importante: resincroniza el formulario cuando cambia el usuario o se abre el diálogo
+  useEffect(() => {
+    if (!open) return
+    setName(user.name)
+    setLastName(user.last_name || "")
+    setEmail(user.email)
+    setRoleId(user.role_id?.toString() || "")
+    setIsActive(user.is_active)
+  }, [user, open])
+
   useEffect(() => {
     async function loadRoles() {
       try {
@@ -114,7 +124,7 @@ export function UserEditDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="cursor-text"
+              className="cursor-text mt-2"
             />
           </div>
 
@@ -125,7 +135,7 @@ export function UserEditDialog({
               id="lastName"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="cursor-text"
+              className="cursor-text mt-2"
             />
           </div>
 
@@ -138,7 +148,7 @@ export function UserEditDialog({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="cursor-text"
+              className="cursor-text mt-2"
             />
           </div>
 
@@ -152,7 +162,7 @@ export function UserEditDialog({
             >
               <SelectTrigger
                 id="role"
-                className="cursor-pointer hover:bg-accent transition-colors"
+                className="cursor-pointer hover:bg-accent transition-colors mt-2"
               >
                 <SelectValue placeholder="Selecciona un rol" />
               </SelectTrigger>
