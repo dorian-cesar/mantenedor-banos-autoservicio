@@ -2,37 +2,45 @@
 
 import useSWR from "swr"
 import { fetchWithAuth } from "@/lib/api"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useMemo } from "react"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Users, Settings, TrendingUp, Activity } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
-interface DashboardStats {
-  totalUsers: number
-  totalServices: number
-  recentUsers: Array<{ id: string; email: string; createdAt: string }>
-  popularServices: Array<{ id: string; nombre: string; usageCount: number }>
-}
-
-const chartConfig = {
-  usageCount: {
-    label: "Uso",
-    color: "hsl(var(--chart-1))",
-  },
-}
+import { Users, Settings, TrendingUp, Activity, CreditCard } from "lucide-react"
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 
 export default function DashboardPage() {
   const { data: users, isLoading: usersLoading } = useSWR("/api/users", fetchWithAuth)
   const { data: services, isLoading: servicesLoading } = useSWR("/api/servicios", fetchWithAuth)
   const { data: ventas, isLoading: loadingVentas } = useSWR("/api/ventas", fetchWithAuth)
-  const { data: logs, isLoading: loadingLogs } = useSWR("/api/logs", fetchWithAuth)
 
   const totalUsers = users?.length || 0
   const totalServices = services?.length || 0
   const recentUsers = users?.slice(0, 5) || []
+  const ventasData = ventas?.data || []
 
+  // Total de ventas (CLP)
+  const totalVentas = ventasData.reduce((acc: number, v: any) => acc + (v.monto || 0), 0)
+
+  // === Formato CLP ===
   const formatCLP = (value: number) =>
     new Intl.NumberFormat("es-CL", {
       style: "currency",
@@ -40,14 +48,44 @@ export default function DashboardPage() {
       minimumFractionDigits: 0,
     }).format(value)
 
-  const totalVentas = ventas?.data?.reduce((acc: number, v: any) => acc + v.monto, 0) || 0
+  // === Datos agrupados para gráficos ===
+  const ventasPorMes = useMemo(() => {
+    const mapa = new Map()
+    ventasData.forEach((v: any) => {
+      const date = new Date(v.creado_en)
+      const mes = date.toLocaleString("es-CL", { month: "long" })
+      const año = date.getFullYear()
+      const clave = `${mes.charAt(0).toUpperCase() + mes.slice(1)} ${año}`
+      const monto = Number(v.monto) || 0
+      mapa.set(clave, (mapa.get(clave) || 0) + monto)
+    })
 
-  // Simular datos de servicios populares para el gráfico
-  const chartData =
-    services?.slice(0, 5).map((service: { nombre: string }, index: number) => ({
-      name: service.nombre,
-      usageCount: Math.floor(Math.random() * 100) + 20,
-    })) || []
+    // Ordenar cronológicamente
+    return Array.from(mapa.entries())
+      .sort((a, b) => {
+        const [mesA, añoA] = a[0].split(" ")
+        const [mesB, añoB] = b[0].split(" ")
+        const dateA = new Date(`${mesA} 1, ${añoA}`)
+        const dateB = new Date(`${mesB} 1, ${añoB}`)
+        return dateA.getTime() - dateB.getTime()
+      })
+      .map(([mes, total]) => ({ mes, total }))
+  }, [ventasData])
+
+  const ventasPorServicio = useMemo(() => {
+    const mapa = new Map()
+    ventasData.forEach((v: any) => {
+      const nombre = v.servicio?.nombre || "Desconocido"
+      const monto = Number(v.monto) || 0
+      mapa.set(nombre, (mapa.get(nombre) || 0) + monto)
+    })
+    return Array.from(mapa.entries()).map(([name, value]) => ({
+      name,
+      value,
+    }))
+  }, [ventasData])
+
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
 
   return (
     <div className="space-y-6">
@@ -56,8 +94,9 @@ export default function DashboardPage() {
         <p className="mt-2 text-muted-foreground">Resumen general del sistema</p>
       </div>
 
-      {/* Stats Cards */}
+      {/* === Tarjetas de resumen === */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Usuarios */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
@@ -75,6 +114,7 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Servicios */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Servicios</CardTitle>
@@ -92,6 +132,25 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Ventas Totales */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Ventas</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {loadingVentas ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <>
+                <div className="text-2xl font-bold">{formatCLP(totalVentas)}</div>
+                <p className="text-xs text-muted-foreground">Monto total vendido</p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Actividad (placeholder visual) */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Actividad</CardTitle>
@@ -102,172 +161,124 @@ export default function DashboardPage() {
             <p className="text-xs text-muted-foreground">vs. mes anterior</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Crecimiento</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">+23%</div>
-            <p className="text-xs text-muted-foreground">Nuevos usuarios</p>
-          </CardContent>
-        </Card>
       </div>
 
+      {/* === Gráficos === */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Chart */}
+        {/* Línea: ventas por día */}
         <Card>
           <CardHeader>
-            <CardTitle>Servicios Más Usados</CardTitle>
-            <CardDescription>Top 5 servicios por uso</CardDescription>
+            <CardTitle>Ventas por Mes</CardTitle>
+            <CardDescription>Evolución mensual del total de ventas</CardDescription>
           </CardHeader>
           <CardContent>
-            {servicesLoading ? (
+            {loadingVentas ? (
               <Skeleton className="h-[300px] w-full" />
             ) : (
-              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+              <ChartContainer config={{}} className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis
-                      dataKey="name"
-                      className="text-xs"
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
+                  <LineChart data={ventasPorMes}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+                    <YAxis />
+                    <Tooltip formatter={(v) => formatCLP(Number(v))} />
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#3b82f6"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
                     />
-                    <YAxis
-                      className="text-xs"
-                      tick={{ fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={{ stroke: "hsl(var(--muted-foreground))" }}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="usageCount" fill="var(--color-usageCount)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
             )}
           </CardContent>
         </Card>
 
-        {/* Recent Users */}
+        {/* Torta: ventas por servicio */}
         <Card>
           <CardHeader>
-            <CardTitle>Usuarios Recientes</CardTitle>
-            <CardDescription>Últimos usuarios registrados</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {usersLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {recentUsers.map((user: { id: string; email: string; nombre?: string }) => (
-                  <div key={user.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <Users className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{user.nombre || "Usuario"}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {recentUsers.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground">No hay usuarios recientes</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ==== NUEVOS BLOQUES ==== */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {/* Ventas */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Ventas Recientes</CardTitle>
-            <CardDescription>Últimas transacciones registradas</CardDescription>
+            <CardTitle>Ventas por Tipo de Servicio</CardTitle>
+            <CardDescription>Distribución de ingresos por servicio</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingVentas ? (
-              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-[300px] w-full" />
             ) : (
-              <>
-                <p className="text-lg font-semibold mb-4">Total vendido: {formatCLP(totalVentas)}</p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Servicio</TableHead>
-                      <TableHead>Monto</TableHead>
-                      <TableHead>Método</TableHead>
-                      <TableHead>Usuario</TableHead>
-                      <TableHead>Fecha</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {ventas?.data?.slice(0, 5).map((v: any) => (
-                      <TableRow key={v.id}>
-                        <TableCell>{v.servicio?.nombre}</TableCell>
-                        <TableCell>{formatCLP(v.monto)}</TableCell>
-                        <TableCell>{v.metodo_pago}</TableCell>
-                        <TableCell>{v.usuario?.name || "Anon"}</TableCell>
-                        <TableCell>{new Date(v.creado_en).toLocaleString("es-CL")}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Logs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Logs de API</CardTitle>
-            <CardDescription>Últimos registros de actividad</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loadingLogs ? (
-              <Skeleton className="h-20 w-full" />
-            ) : logs?.length ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Endpoint</TableHead>
-                    <TableHead>Método</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Tiempo (ms)</TableHead>
-                    <TableHead>Fecha</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {logs.slice(0, 5).map((log: any) => (
-                    <TableRow key={log.id}>
-                      <TableCell>{log.user_email}</TableCell>
-                      <TableCell>{log.endpoint}</TableCell>
-                      <TableCell>{log.method}</TableCell>
-                      <TableCell>{log.status_code}</TableCell>
-                      <TableCell>{log.response_time_ms}</TableCell>
-                      <TableCell>{new Date(log.created_at).toLocaleString("es-CL")}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-muted-foreground text-sm text-center py-6">No hay logs recientes</p>
+              <ChartContainer config={{}} className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={ventasPorServicio}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      dataKey="value"
+                      label={({ name, percent }) =>
+                        `${name} ${((percent as number) * 100).toFixed(0)}%`
+                      }
+                    >
+                      {ventasPorServicio.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(v) => formatCLP(Number(v))} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ChartContainer>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* === Usuarios Recientes === */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuarios Recientes</CardTitle>
+          <CardDescription>Últimos usuarios registrados</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {usersLoading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recentUsers.map((user: { id: string; email: string; nombre?: string }) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {user.nombre || "Usuario"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {recentUsers.length === 0 && (
+                <p className="text-center text-sm text-muted-foreground">
+                  No hay usuarios recientes
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -24,10 +24,22 @@ export default function VentasPage() {
   }, [searchTerm])
 
   // 🔹 SWR obtiene ventas filtradas desde backend
-  const { data: ventas, isLoading, mutate } = useSWR(
+  const { data: ventas, isLoading } = useSWR(
     `/api/ventas?search=${debouncedSearch}`,
     fetchWithAuth
   )
+
+  // 🔹 Mostrar la fecha sin modificarla (solo limpiar formato visual)
+  const fechaLegible = (s: string) => (s ? s.replace("T", " ").replace("Z", "").slice(0, 19) : "—")
+
+  // 🔹 Colorear el estado
+  const getEstadoClase = (estado: string) => {
+    const n = estado?.toLowerCase()
+    if (n?.startsWith("aprob")) return "bg-green-100 text-green-700"
+    if (n === "pendiente") return "bg-yellow-100 text-yellow-700"
+    if (n === "rechazada") return "bg-red-100 text-red-700"
+    return "bg-gray-100 text-gray-700"
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -67,6 +79,7 @@ export default function VentasPage() {
                     <TableHead>Creado en</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {ventas?.data?.length > 0 ? (
                     ventas.data.map((venta: any) => (
@@ -79,13 +92,7 @@ export default function VentasPage() {
                         <TableCell className="capitalize">{venta.metodo_pago}</TableCell>
                         <TableCell>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              venta.estado === "completado"
-                                ? "bg-green-100 text-green-700"
-                                : venta.estado === "pendiente"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
-                            }`}
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoClase(venta.estado)}`}
                           >
                             {venta.estado}
                           </span>
@@ -95,14 +102,8 @@ export default function VentasPage() {
                         <TableCell>{venta.codigo_comercio || "—"}</TableCell>
                         <TableCell>{venta.ip_amos || "—"}</TableCell>
                         <TableCell>{venta.ubicacion || "—"}</TableCell>
-                        <TableCell>
-                          {venta.creado_en
-                            ? new Date(venta.creado_en).toLocaleString("es-CL", {
-                                dateStyle: "short",
-                                timeStyle: "short",
-                              })
-                            : "—"}
-                        </TableCell>
+                        {/* 🔹 Muestra exactamente la fecha que viene del backend */}
+                        <TableCell>{fechaLegible(venta.creado_en)}</TableCell>
                       </TableRow>
                     ))
                   ) : (
