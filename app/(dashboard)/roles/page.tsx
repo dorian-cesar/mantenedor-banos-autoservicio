@@ -3,14 +3,27 @@
 import useSWR from "swr"
 import { useState } from "react"
 import { fetchWithAuth } from "@/lib/api"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
-import { Search, Shield, Plus, Pencil, Trash2 } from "lucide-react"
+import { Search, Shield, Plus, Pencil, Trash2, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function RolesPage() {
   const { data: roles, isLoading, mutate } = useSWR("/api/roles", fetchWithAuth)
@@ -19,6 +32,12 @@ export default function RolesPage() {
   const [editRole, setEditRole] = useState<any>(null)
   const [name, setName] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Delete dialog (como en service-delete-dialog)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<any>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   const { toast } = useToast()
 
   const filteredRoles = roles?.filter((r: any) =>
@@ -37,6 +56,11 @@ export default function RolesPage() {
     setOpenDialog(true)
   }
 
+  const handleOpenDelete = (role: any) => {
+    setDeleteTarget(role)
+    setDeleteOpen(true)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -46,13 +70,13 @@ export default function RolesPage() {
           method: "PUT",
           body: JSON.stringify({ name }),
         })
-        toast({ title: "Rol actualizado", description: "El rol se actualizó correctamente" })
+        toast({ title: "Rol actualizado", description: `Se actualizó "${name}".` })
       } else {
         await fetchWithAuth("/api/roles", {
           method: "POST",
           body: JSON.stringify({ name }),
         })
-        toast({ title: "Rol creado", description: "El nuevo rol se creó correctamente" })
+        toast({ title: "Rol creado", description: `Se creó "${name}".` })
       }
       setOpenDialog(false)
       mutate()
@@ -67,18 +91,26 @@ export default function RolesPage() {
     }
   }
 
-  const handleDelete = async (roleId: number) => {
-    if (!confirm("¿Seguro que deseas eliminar este rol?")) return
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setIsDeleting(true)
     try {
-      await fetchWithAuth(`/api/roles/${roleId}`, { method: "DELETE" })
-      toast({ title: "Rol eliminado", description: "El rol se eliminó correctamente" })
+      await fetchWithAuth(`/api/roles/${deleteTarget.id}`, { method: "DELETE" })
+      toast({
+        title: "Rol eliminado",
+        description: `El rol "${deleteTarget.name}" ha sido eliminado correctamente.`,
+      })
+      setDeleteOpen(false)
+      setDeleteTarget(null)
       mutate()
     } catch (error) {
       toast({
-        title: "Error",
+        title: "Error al eliminar",
         description: error instanceof Error ? error.message : "No se pudo eliminar el rol",
         variant: "destructive",
       })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -102,7 +134,7 @@ export default function RolesPage() {
         </Button>
       </div>
 
-      {/* Tabla de roles */}
+      {/* Tabla de roles (mismo patrón visual que service-table) */}
       <Card>
         <CardHeader>
           <CardTitle>Lista de Roles</CardTitle>
@@ -110,6 +142,7 @@ export default function RolesPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* Buscador (igual estilo al de servicios) */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -127,50 +160,69 @@ export default function RolesPage() {
               ))}
             </div>
           ) : filteredRoles && filteredRoles.length > 0 ? (
-            <table className="w-full border border-border rounded-md">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left px-4 py-2">Nombre</th>
-                  <th className="text-left px-4 py-2">Fecha de creación</th>
-                  <th className="text-right px-4 py-2">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRoles.map((role: any) => (
-                  <tr
-                    key={role.id}
-                    className="border-t border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-4 py-2">{role.name}</td>
-                    <td className="px-4 py-2">
-                      {new Date(role.created_at).toLocaleDateString("es-CL")}
-                    </td>
-                    <td className="px-4 py-2 text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenEdit(role)}
-                          className="cursor-pointer hover:bg-accent transition-colors"
-                          title="Editar rol"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(role.id)}
-                          className="cursor-pointer hover:bg-destructive/10 transition-colors"
-                          title="Eliminar rol"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                      Nombre
+                    </TableHead>
+                    <TableHead className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                      Fecha de creación
+                    </TableHead>
+                    <TableHead className="px-6 py-3 text-right text-sm font-semibold text-foreground">
+                      Acciones
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRoles.map((role: any) => (
+                    <TableRow
+                      key={role.id}
+                      className="transition-colors hover:bg-muted/40"
+                    >
+                      <TableCell className="px-6 py-4 text-sm text-foreground">
+                        {role.name}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-sm text-muted-foreground">
+                        {new Date(role.created_at).toLocaleDateString("es-CL", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="flex justify-end gap-1">
+                          {/* Botón Editar (icon-only ghost, igual a servicios) */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenEdit(role)}
+                            className="cursor-pointer hover:bg-primary/10"
+                            title="Editar rol"
+                            aria-label="Editar rol"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+
+                          {/* Botón Eliminar (icon-only ghost, igual a servicios) */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDelete(role)}
+                            className="cursor-pointer hover:bg-destructive/10"
+                            title="Eliminar rol"
+                            aria-label="Eliminar rol"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <p className="text-center text-sm text-muted-foreground py-8">
               No se encontraron roles registrados
@@ -179,7 +231,7 @@ export default function RolesPage() {
         </CardContent>
       </Card>
 
-      {/* Dialog Crear/Editar */}
+      {/* Dialog Crear/Editar (patrón como service-create/edit-dialog) */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent>
           <DialogHeader>
@@ -215,6 +267,42 @@ export default function RolesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog (patrón como service-delete-dialog) */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar rol</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              ¿Estás seguro de que deseas eliminar el rol{" "}
+              <span className="font-medium text-foreground">
+                “{deleteTarget?.name}”
+              </span>
+              ? Esta acción no se puede deshacer.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="gap-2"
+            >
+              {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Eliminar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
